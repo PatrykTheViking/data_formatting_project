@@ -51,30 +51,32 @@ use Quatar2022
 go
 
 CREATE TABLE Kraje (
-	KrajID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	KrajID int IDENTITY(1,1) PRIMARY KEY,
 	Nazwa nvarchar(20) NOT NULL ,
 	Kod nvarchar(10) NOT NULL ,
 	Flaga nvarchar(100) NULL,
 );
 
 CREATE TABLE Stadiony (
-	Id int IDENTITY(1,1) NOT NULL PRIMARY KEY ,
+	Id int IDENTITY(1,1) PRIMARY KEY ,
 	"Nazwa turniejowa" nvarchar(20) NOT NULL ,
 	Miasto nvarchar(10) NOT NULL ,
 	"Pojemność turniejowa" nvarchar(100) NULL,
+	CONSTRAINT UQ_Stadion UNIQUE("Nazwa turniejowa")
+
 );
 
 CREATE TABLE Zawodnicy (
-	Id int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Id int IDENTITY(1,1) PRIMARY KEY,
 	Nazwisko nvarchar(50) NOT NULL ,
 	Wiek int,
 	Pozycja nvarchar(20) NOT NULL,
 	Zdjęcie nvarchar(100) NOT NULL,
-	Narodowość int NOT NULL FOREIGN KEY REFERENCES Kraje(KrajID)
+	Narodowość int NOT NULL FOREIGN KEY REFERENCES Kraje(KrajID),
 );
 
 CREATE TABLE Mecze (
-	Id int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Id int IDENTITY(1,1) PRIMARY KEY,
 	Gospodarz int NOT NULL FOREIGN KEY REFERENCES Kraje(KrajID),
 	Gość int NOT NULL FOREIGN KEY REFERENCES Kraje(KrajID),
 	Wynik int NOT NULL,
@@ -1943,7 +1945,7 @@ INSERT INTO Mecze (Gospodarz, Gość, Wynik, Miejsce, "Data rozpoczęcia") VALUE
 
 SET ANSI_WARNINGS ON;
 
---CREATE  INDEX "Nazwa" ON "dbo"."Kraje"("Nazwa")
+CREATE  INDEX "Nazwa Kraju" ON "dbo"."Kraje"("Nazwa")
 
 USE Quatar2022
 go
@@ -1954,7 +1956,7 @@ AS
 SELECT m.Id
       ,kg.Nazwa as Gospodarz
       ,k.Nazwa as Gość
-      ,CASE 
+      ,CASE
 		WHEN Wynik = 0 THEN 'Remis'
 		WHEN Wynik = 1 THEN 'Gospodarz'
 		WHEN Wynik = 2 THEN 'Gość'
@@ -1984,11 +1986,11 @@ order by [Data rozpoczęcia] ASC
 GO
 
 WITH cte_tymczasowa_tabela  AS  (
-SELECT Gospodarz, 
+SELECT Gospodarz,
 sum(CASE
-	WHEN Wynik = 'Gospodarz' THEN 3
-	WHEN Wynik = 'Remis' THEN 1
-	ELSE 0
+		WHEN Wynik = 'Gospodarz' THEN 3
+		WHEN Wynik = 'Remis' THEN 1
+		ELSE 0
 END) AS 'Punktacja'
 FROM [dbo].[PełnaRozpiskaMeczy]
 group by Gospodarz
@@ -1997,11 +1999,11 @@ UNION ALL
 
 SELECT Gość,
 SUM(
-CASE
-	WHEN Wynik = 'Gospodarz' THEN 0
-	WHEN Wynik = 'Remis' THEN 1
-	ELSE 3
-END) AS 'Punktacja'
+	CASE
+		WHEN Wynik = 'Gospodarz' THEN 0
+		WHEN Wynik = 'Remis' THEN 1
+		ELSE 3
+	END) AS 'Punktacja'
 FROM [dbo].[PełnaRozpiskaMeczy]
 group by Gość
 
